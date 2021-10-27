@@ -1,17 +1,17 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.shortcuts import get_object_or_404
-from django.urls import reverse_lazy
-from django.views.generic import ListView
-from django.views.generic.edit import CreateView
+from django.urls import reverse, reverse_lazy
+from django.views.generic import DetailView, ListView
+from django.views.generic.edit import CreateView, UpdateView
 
 from people.models import Person
 
-from .models import BodyTemperature
+from .models import TemperatureRecord
 
 
-class BodyTemperatureCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
-    model = BodyTemperature
+class TemperatureRecordCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
+    model = TemperatureRecord
     fields = ("temp",)
     template_name = "records/body_temperature_form.html"
 
@@ -35,10 +35,10 @@ class BodyTemperatureCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateV
         return reverse_lazy("people:person_list")
 
 
-class BodyTemperatureByPersonListView(
+class TemperatureRecordByPersonListView(
     LoginRequiredMixin, UserPassesTestMixin, ListView
 ):
-    model = BodyTemperature
+    model = TemperatureRecord
     context_object_name = "body_temperature"
     template_name = "records/body_temperature_list.html"
     paginate_by = 10

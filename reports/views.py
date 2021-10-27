@@ -1,13 +1,13 @@
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.views.generic.dates import DayArchiveView, TodayArchiveView
 
-from records.models import BodyTemperature
+from records.models import TemperatureRecord
 
 
-class BodyTemperatureDayArchiveView(
+class TemperatureRecordDayArchiveView(
     LoginRequiredMixin, UserPassesTestMixin, DayArchiveView
 ):
-    queryset = BodyTemperature.objects.all()
+    queryset = TemperatureRecord.objects.all()
     date_field = "created_at"
     context_object_name = "body_temperature"
     template_name = "reports/body_temperature_list.html"
@@ -18,10 +18,10 @@ class BodyTemperatureDayArchiveView(
         return False
 
 
-class BodyTemperatureTodayArchiveView(
+class TemperatureRecordTodayArchiveView(
     LoginRequiredMixin, UserPassesTestMixin, TodayArchiveView
 ):
-    queryset = BodyTemperature.objects.all()
+    queryset = TemperatureRecord.objects.all()
     date_field = "created_at"
     context_object_name = "body_temperature"
     template_name = "reports/body_temperature_list.html"

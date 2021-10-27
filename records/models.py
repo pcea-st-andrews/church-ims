@@ -8,9 +8,9 @@ from core.models import TimeStampedModel
 from people.models import Person
 
 
-class BodyTemperature(TimeStampedModel):
+class TemperatureRecord(TimeStampedModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    temp = models.DecimalField(
+    body_temperature = models.DecimalField(
         verbose_name="temperature record",
         help_text="A person's body temperature in degrees celsius",
         max_digits=4,
@@ -25,8 +25,8 @@ class BodyTemperature(TimeStampedModel):
     )
 
     class Meta:
-        verbose_name_plural = "body temperature"
-        db_table = "records_body_temperature"
+        db_table = "records_temperature"
+        ordering = ["person__username", "created_at"]
 
     def __str__(self):
         return "{}'s temperature at {}".format(
