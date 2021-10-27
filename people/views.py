@@ -7,9 +7,9 @@ from django.views.generic.edit import CreateView, DeleteView, UpdateView
 
 from extra_views import SearchableListMixin
 
-from .forms import ChildForm, FamilyRelationshipForm
+from .forms import ChildForm, InterpersonalRelationshipForm
 from .helpers import get_user_profile
-from .models import FamilyRelationship, Person
+from .models import InterpersonalRelationship, Person
 
 
 class PersonListView(
@@ -81,7 +81,7 @@ class PersonDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
 
 
 class RelationshipByUserListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
-    model = FamilyRelationship
+    model = InterpersonalRelationship
     context_object_name = "relationships"
     template_name = "people/relationship_list.html"
 
@@ -99,7 +99,7 @@ class RelationshipByUserListView(LoginRequiredMixin, UserPassesTestMixin, ListVi
 
 
 class RelationshipListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
-    model = FamilyRelationship
+    model = InterpersonalRelationship
     context_object_name = "relationships"
     template_name = "people/relationship_list.html"
     paginate_by = 10
@@ -111,7 +111,7 @@ class RelationshipListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
 
 
 class RelationshipCreateView(LoginRequiredMixin, CreateView):
-    form_class = FamilyRelationshipForm
+    form_class = InterpersonalRelationshipForm
     template_name = "people/relationship_form.html"
 
     def get_context_data(self, **kwargs):
@@ -138,20 +138,20 @@ class RelationshipCreateView(LoginRequiredMixin, CreateView):
 
 
 class RelationshipUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
-    form_class = FamilyRelationshipForm
+    form_class = InterpersonalRelationshipForm
     context_object_name = "relationship"
     template_name = "people/relationship_form.html"
 
     def test_func(self):
         current_user = self.request.user
-        # relationship = self.get_object()
+        relationship = self.get_object()
         # current_user.is_staff or (current_user.pk == relationship.person.pk)
         if current_user.is_superuser:
             return True
         return False
 
     def get_object(self):
-        return get_object_or_404(FamilyRelationship, pk=self.kwargs.get("pk"))
+        return get_object_or_404(InterpersonalRelationship, pk=self.kwargs.get("pk"))
 
     def form_valid(self, form):
         form.instance.updated_by = self.request.user
@@ -165,7 +165,7 @@ class RelationshipUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView
 
 
 class RelationshipDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
-    model = FamilyRelationship
+    model = InterpersonalRelationship
     context_object_name = "relationship"
     template_name = "people/relationship_detail.html"
 
@@ -177,11 +177,11 @@ class RelationshipDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView
         return False
 
     def get_object(self):
-        return get_object_or_404(FamilyRelationship, pk=self.kwargs.get("pk"))
+        return get_object_or_404(InterpersonalRelationship, pk=self.kwargs.get("pk"))
 
 
 class RelationshipDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
-    model = FamilyRelationship
+    model = InterpersonalRelationship
     context_object_name = "relationship"
     fields = ("relative", "relationship_type")
     template_name = "people/relationship_confirm_delete.html"
@@ -192,7 +192,7 @@ class RelationshipDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView
         return False
 
     def get_object(self):
-        return get_object_or_404(FamilyRelationship, pk=self.kwargs.get("pk"))
+        return get_object_or_404(InterpersonalRelationship, pk=self.kwargs.get("pk"))
 
     def get_success_url(self):
         return reverse_lazy("people:relationship_by_user_list")

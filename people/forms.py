@@ -1,8 +1,9 @@
 from django import forms
+from django.core.exceptions import NON_FIELD_ERRORS
 
-from core.validators import validate_child, validate_date_of_birth
+from core.validators import validate_adult, validate_child, validate_date_of_birth
 
-from .models import FamilyRelationship, Person
+from .models import InterpersonalRelationship, Person
 
 
 class ChildForm(forms.ModelForm):
@@ -17,7 +18,7 @@ class ChildForm(forms.ModelForm):
         fields = ("username", "full_name", "dob", "gender")
 
 
-class FamilyRelationshipForm(forms.ModelForm):
+class InterpersonalRelationshipForm(forms.ModelForm):
     class Meta:
-        model = FamilyRelationship
-        fields = ("relative", "relationship_type")
+        model = InterpersonalRelationship
+        fields = ("relative", "relation")

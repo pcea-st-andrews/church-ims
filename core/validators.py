@@ -3,7 +3,7 @@ import re
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 
-from .constants import AGE_OF_MAJORITY, MAX_HUMAN_LIFESPAN
+from .constants import AGE_OF_MAJORITY, MAX_HUMAN_AGE
 from .utils import get_age
 
 
@@ -14,7 +14,7 @@ def validate_date_of_birth(value):
     age = get_age(value)
     if age < 0:
         raise ValidationError(_("Date of birth can't be in the future"))
-    if age > MAX_HUMAN_LIFESPAN:
+    if age > MAX_HUMAN_AGE:
         raise ValidationError(_("Age can't be greater than the maximum human lifespan"))
 
 

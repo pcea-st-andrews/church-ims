@@ -4,56 +4,45 @@ from django.conf import settings
 from django.db import models
 from django.urls import reverse
 
-from core.constants import AGE_OF_MAJORITY
+from phonenumber_field.modelfields import PhoneNumberField
+
+from core.constants import (
+    AGE_OF_MAJORITY,
+    GENDER_CHOICES,
+    INTERPERSONAL_RELATIONSHIP_CHOICES,
+)
 from core.models import TimeStampedModel
 from core.utils import get_age
-from core.validators import validate_date_of_birth, validate_full_name
+from core.validators import validate_full_name
 
 
-class Person(TimeStampedModel):
-    GENDER_CHOICES = [
-        ("M", "Male"),
-        ("F", "Female"),
-    ]
-    username = models.SlugField(
-        default=uuid.uuid4,
-        error_messages={"unique": "A user with that username already exists."},
-        help_text="Enter a human-readable unique username without any full-stops",
+class Person(models.Model):
+    username = models.CharField(
+        max_length=50,
         unique=True,
+        error_messages={"unique": "A person with that username already exists."},
     )
+    full_name = models.CharField(max_length=300, validators=[validate_full_name])
+    gender = models.CharField(max_length=1, choices=GENDER_CHOICES)
+    dob = models.DateField(verbose_name="date of birth")
+    phone_number = PhoneNumberField(null=True)
     user = models.OneToOneField(
-        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True
-    )
-    full_name = models.CharField(
-        max_length=300, null=True, validators=[validate_full_name]
-    )
-    dob = models.DateField(
-        verbose_name="date of birth",
-        help_text="Please use the following format: <em>DD/MM/YYYY.</em>",
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
         null=True,
-        validators=[validate_date_of_birth],
-    )
-    gender = models.CharField(max_length=1, choices=GENDER_CHOICES, null=True)
-    family_members = models.ManyToManyField(
-        "self",
-        through="FamilyRelationship",
-        through_fields=("person", "relative"),
+        help_text="This person's user account.",
     )
     created_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
+        to=settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
+        null=True,
+        help_text="The user who created this record.",
         related_name="people_creators",
-        null=True,
     )
-    updated_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
-        related_name="people_editors",
-        null=True,
-        blank=True,
-    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    last_modified = models.DateTimeField(auto_now=True)
 
-    class Meta:
+    class Meta:  # noqa
         ordering = ["username"]
         verbose_name_plural = "people"
 
@@ -65,67 +54,49 @@ class Person(TimeStampedModel):
 
     @property
     def age(self):
-        if self.dob is not None:
-            return get_age(self.dob)
-        return None
+        return get_age(self.dob)
 
     @property
     def is_adult(self):
-        if self.age is not None:
-            return self.age >= AGE_OF_MAJORITY
-        return "Undefined"
+        return self.age >= AGE_OF_MAJORITY
 
 
-class FamilyRelationship(TimeStampedModel):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    person = models.ForeignKey(Person, on_delete=models.CASCADE)
-    relative = models.ForeignKey(
-        Person, on_delete=models.CASCADE, related_name="relatives"
+class InterpersonalRelationship(TimeStampedModel):
+    id = models.UUIDField(
+        editable=False, default=uuid.uuid4, primary_key=True, verbose_name="ID"
     )
-    relationship_type = models.ForeignKey(
-        "RelationshipType",
-        help_text="How is the person related to you?",
-        on_delete=models.PROTECT,
+    person = models.ForeignKey(
+        to=Person, on_delete=models.CASCADE, related_name="relationships"
+    )
+    relative = models.ForeignKey(
+        to=Person, on_delete=models.CASCADE, related_name="reverse_relationships"
+    )
+    relation = models.CharField(
+        max_length=2,
+        choices=INTERPERSONAL_RELATIONSHIP_CHOICES,
+        help_text="How the person and the relative are associated.",
     )
     created_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
+        to=settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
-        related_name="relationship_creators",
         null=True,
+        help_text="The user who created this record.",
     )
-    updated_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
-        related_name="relationship_editors",
-        null=True,
-        blank=True,
-    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    last_modified = models.DateTimeField(auto_now=True)
 
     class Meta:
-        db_table = "people_family_relationship"
         constraints = [
             models.UniqueConstraint(
                 fields=["person", "relative"],
-                name="%(app_label)s_%(class)s_unique_relationships",
-            ),
-            models.CheckConstraint(
-                check=~models.Q(person=models.F("relative")),
-                name="%(app_label)s_%(class)s_prevent_self_relationship",
-            ),
+                name="%(app_label)s_unique_%(class)s",
+            )
         ]
+        db_table = "people_relationship"
+        ordering = ["person__username"]
 
     def __str__(self):
         return f"{self.person}'s {self.relationship_type}"
 
     def get_absolute_url(self):
         return reverse("people:family_relationship_detail", kwargs={"pk": self.pk})
-
-
-class RelationshipType(models.Model):
-    name = models.CharField(max_length=50)
-
-    class Meta:
-        db_table = "people_relationship_type"
-
-    def __str__(self):
-        return self.name

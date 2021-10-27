@@ -1,2 +1,17 @@
+# gender
+GENDER_CHOICES = [("M", "Male"), ("F", "Female")]
+
+# age
 AGE_OF_MAJORITY = 18
-MAX_HUMAN_LIFESPAN = 150
+AGE_OF_SENIORITY = 65
+MAX_HUMAN_AGE = 115
+
+# age brackets
+TEENAGE = (13, 19)
+YOUNG_ADULTHOOD = (20, 29)
+MIDDLE_AGE = (45, 65)
+
+# relationships
+INTIMATE_RELATIONSHIPS = [("R", "Romantic"), ("M", "Marital")]
+FAMILIAL_RELATIONSHIPS = [("PC", "Parent-child"), ("S", "Sibling")]
+INTERPERSONAL_RELATIONSHIP_CHOICES = INTIMATE_RELATIONSHIPS + FAMILIAL_RELATIONSHIPS
