@@ -35,8 +35,19 @@ pg_restore --verbose --clean --no-acl --no-owner -d "$DB_NAME" "$latest_dump"
 git checkout 0.3.0-alpha/migrations && git pull
 python manage.py migrate
 psql -f ./scripts/migrations.sql -d "$DB_NAME"
-pg_dump -t django_migrations "$NEW_DB_NAME" | psql "$DB_NAME"
-pg_dump -t django_content_type "$NEW_DB_NAME" | psql "$DB_NAME"
+tables_to_copy=(
+    "accounts_user_user_permissions"
+    "accounts_user_groups"
+    "auth_group_permissions"
+    "auth_group"
+    "auth_permission"
+    "django_content_type"
+    "django_migrations"
+)
+for table in "${tables_to_copy[@]}"; do
+    echo "Copying table $table from $NEW_DB_NAME to $DB_NAME"
+    pg_dump -t "$table" "$NEW_DB_NAME" | psql "$DB_NAME"
+done
 
 # export the data
 pg_dump -Fc --no-acl --no-owner "$DB_NAME" > "$PG_DUMP"
